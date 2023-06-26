@@ -49,7 +49,19 @@ enum CalculatorButton : String{
     }
 }
 
+// Env Object
+// You can treat this is as an Global Applciation State
+class GlobalEnvironment : ObservableObject {
+    
+    @Published var display = ""
+    
+    func receiveInput(calculatorButton : CalculatorButton){
+        self.display = calculatorButton.title
+    }
+}
+
 struct ContentView: View {
+    @EnvironmentObject var env : GlobalEnvironment
     
     let buttons : [[CalculatorButton]] = [
         [.ac, .plusMinus, .percent, .divide],
@@ -65,24 +77,14 @@ struct ContentView: View {
             VStack(spacing: 12) {
                 HStack {
                     Spacer()
-                    Text("42").foregroundColor(.white)
+                    Text(env.display).foregroundColor(.white)
                         .font(.system(size: 64))
                 }.padding()
                 
                 ForEach(buttons, id : \.self) { row in
                     HStack(spacing: 12){
                         ForEach(row, id : \.self) { button in
-                            
-                            Button(action: {
-                                
-                            }) {
-                                Text(button.title)
-                                    .font(.system(size: 32))
-                                    .frame(width : self.buttonWidth(button: button), height: (UIScreen.main.bounds.width - 5 * 12) / 4)
-                                    .foregroundColor(.white)
-                                    .background(button.backgroundColor)
-                                    .cornerRadius(self.buttonWidth(button: button))
-                            }
+                            CalculatorButtonView(button: button)
                         }
                     }
                 }
@@ -90,7 +92,26 @@ struct ContentView: View {
         }
     }
     
-    func buttonWidth(button : CalculatorButton) -> CGFloat {
+    
+}
+
+struct CalculatorButtonView : View {
+    var button : CalculatorButton
+    @EnvironmentObject var env : GlobalEnvironment
+    var body: some View {
+        Button(action: {
+            self.env.receiveInput(calculatorButton: button)
+        }) {
+            Text(button.title)
+                .font(.system(size: 32))
+                .frame(width : self.buttonWidth(button: button), height: (UIScreen.main.bounds.width - 5 * 12) / 4)
+                .foregroundColor(.white)
+                .background(button.backgroundColor)
+                .cornerRadius(self.buttonWidth(button: button))
+        }
+    }
+    
+    private func buttonWidth(button : CalculatorButton) -> CGFloat {
         if button == .zero {
             return  (UIScreen.main.bounds.width - 4 * 12) / 4 * 2
         }
@@ -100,6 +121,6 @@ struct ContentView: View {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView()
+        ContentView().environmentObject(GlobalEnvironment())
     }
 }
